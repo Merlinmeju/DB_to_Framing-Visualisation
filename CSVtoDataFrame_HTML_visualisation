@@ -1,0 +1,91 @@
+import pandas as pd
+
+# Load the CSV files
+df1 = pd.read_csv("df1_original_data.csv")
+df2 = pd.read_csv("df2_modified_data.csv")
+
+# print(df1)
+
+#Taking first 50 as sample
+
+print(df1)
+
+df1= df1.head(50)
+df2= df2.head(50)
+
+#Primary key= ID, setting inplace
+
+df1.set_index("ID", inplace=True)
+df2.set_index("ID", inplace=True)
+
+
+comparison= df1.compare(df2, result_names= ('Table 1', 'Table 2'))
+
+print(comparison)
+
+mismatched_ids= comparison.index
+
+mismatched_cols=[col[0] for col in comparison.columns if col[0] not in  ['self','others']]
+
+mismatched_vals = [(index, row) for index, row in comparison.iterrows()]
+
+print("Mismatched IDs:\n", ", ".join(map(str, mismatched_ids)))
+print("Columns:\n", ", ".join(mismatched_cols))
+
+for idx, diff_row in mismatched_vals:
+    print(f"\nID {idx} has mismatches:")
+    print(diff_row)
+
+#representation- to be worked on
+
+def highlight_diff(val, col, idx):
+    if val != df2.at[idx, col]:
+        return 'background-color: red; color: white'
+    else:
+        return 'background-color: green; color: white'
+
+# highlighting function row-wise
+def style_comparison(df1):
+    return df1.style.apply(
+        lambda row: [highlight_diff(row[col], col, row.name) for col in df1.columns],
+        axis=1
+    )
+
+# Generate the styled table
+styled_table = style_comparison(df1)
+
+# Save and open in browser
+output_path = "visual_comparison.html"
+styled_table.to_html(output_path, escape=False)
+
+import webbrowser
+webbrowser.open(output_path)
+
+
+
+
+# SECOND TRY:
+# def format_cell(val1, val2):
+#     if pd.isna(val1) and pd.isna(val2):
+#         return ''
+#     elif val1 == val2:
+#         return f'<div style="background-color:green; color:white; padding:4px">{val1}</div>'
+#     else:
+#         return f'<div style="background-color:red; color:white; padding:4px">{val1} → {val2}</div>'
+#
+# for col in df1.columns:
+#     merged[col] = [
+#         format_cell(df1.at[idx, col], df2.at[idx, col]) if idx in df2.index else
+#         f'<div style="background-color:orange; color:white; padding:4px">{df1.at[idx, col]} → MISSING</div>'
+#         for idx in df1.index
+#     ]
+#
+# # Convert to HTML
+# html_output = merged.to_html(escape=False)
+#
+# # Save and open in browser
+# output_path = "visual_comparison.html"
+# with open(output_path, "w") as f:
+#     f.write(html_output)
+#
+# webbrowser.open(output_path)
