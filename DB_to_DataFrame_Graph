@@ -1,0 +1,46 @@
+import psycopg2
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Connect-engine
+from sqlalchemy import create_engine
+engine = create_engine('postgresql+psycopg2://postgres:root@localhost:5432/greencycle')
+
+
+#  Query
+query= "Select fa.actor_id, *  from film f LEFT JOIN film_actor fa ON fa.film_id= f.film_id"
+
+#  DataFrame
+df = pd.read_sql(query, engine)
+print(df.head(100))
+
+#cols for display
+print(f'\n columns: {df.columns.tolist()}')
+
+for i, col in enumerate(df.columns, start=1):
+    print(f"{i}. {col}")
+
+
+
+#  Chart
+
+
+# 1. Bar plot: Count of movies per rating
+plt.figure(figsize=(5, 10))
+df['rating'].value_counts().plot(kind='bar', color='teal')
+plt.title("Count of Movies by Rating")
+plt.xlabel("Rating")
+plt.ylabel("Number of Movies")
+plt.tight_layout()
+
+
+# 2. Histogram: Distribution of movie lengths
+plt.figure(figsize=(5, 8))
+plt.hist(df['length'].dropna(), bins=10, color='orange', edgecolor='black')
+plt.title("Distribution of Movie Lengths")
+plt.xlabel("Length (minutes)")
+plt.ylabel("Number of Movies")
+plt.tight_layout()
+
+
+plt.show()
